@@ -68,17 +68,25 @@ class QuestionDetector:
         """
         questions = []
 
-        # Split into sentences
-        sentences = re.split(r'[.!?]+', text)
+        # Split into sentences - more flexible splitting
+        sentences = re.split(r'[.!?]+|\n+', text)
+
+        print(f"[QuestionDetector] Analyzing text with {len(sentences)} sentences")
 
         for sentence in sentences:
             sentence = sentence.strip()
-            if sentence and QuestionDetector.is_question(sentence):
-                # Add question mark if missing
-                if not sentence.endswith('?'):
-                    sentence += '?'
-                questions.append(sentence)
+            if sentence and len(sentence) > 10:  # Minimum length
+                is_q = QuestionDetector.is_question(sentence)
+                print(f"[QuestionDetector] '{sentence[:50]}...' -> Question: {is_q}")
 
+                if is_q:
+                    # Add question mark if missing
+                    if not sentence.endswith('?'):
+                        sentence += '?'
+                    questions.append(sentence)
+                    print(f"[QuestionDetector] ✓ Added question: {sentence[:60]}...")
+
+        print(f"[QuestionDetector] Found {len(questions)} questions total")
         return questions
 
 
@@ -152,25 +160,31 @@ class RealtimeProcessor:
 
     def _process_loop(self):
         """Main processing loop (runs in background thread)."""
-        print("Processing loop started")
+        print("[RealtimeProcessor] Processing loop started")
 
         while self.is_processing:
             try:
                 # Get audio chunk from queue (with timeout)
                 chunk_data = self.audio_queue.get(timeout=1)
+                print(f"[RealtimeProcessor] Got audio chunk from queue, size: {len(chunk_data['audio'])}")
 
                 # Transcribe chunk
+                print("[RealtimeProcessor] Transcribing chunk...")
                 transcript_text = self._transcribe_chunk(
                     chunk_data['audio'],
                     chunk_data['sample_rate']
                 )
+                print(f"[RealtimeProcessor] Transcription result: '{transcript_text[:100] if transcript_text else 'None'}...'")
 
                 if transcript_text:
                     # Update transcript
                     self._update_transcript(transcript_text)
 
                     # Detect questions
+                    print(f"[RealtimeProcessor] Detecting questions in: '{transcript_text[:60]}...'")
                     questions = QuestionDetector.extract_questions(transcript_text)
+                    print(f"[RealtimeProcessor] Detected {len(questions)} questions")
+
                     for question in questions:
                         self._handle_detected_question(question)
 
@@ -179,10 +193,12 @@ class RealtimeProcessor:
             except queue.Empty:
                 continue
             except Exception as e:
-                print(f"Error in processing loop: {e}")
+                print(f"[RealtimeProcessor] Error in processing loop: {e}")
+                import traceback
+                traceback.print_exc()
                 continue
 
-        print("Processing loop ended")
+        print("[RealtimeProcessor] Processing loop ended")
 
     def _transcribe_chunk(self, audio_data, sample_rate):
         """
