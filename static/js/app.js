@@ -59,7 +59,30 @@ function initializeSocket() {
         currentTranscript = data.text;
         displayTranscript(data.text, data.time_ms);
         showQASection();
-        showMessage(`Transcription completed in ${data.time_ms}ms`, 'success');
+
+        let message = `Transcription completed in ${data.time_ms}ms`;
+        if (data.questions_detected) {
+            message += ` - ${data.questions_detected} questions detected!`;
+        }
+        showMessage(message, 'success');
+    });
+
+    socket.on('auto_answer', function(data) {
+        console.log('Auto answer received:', data);
+        // Display as a simple answer card
+        const answersContainer = document.getElementById('answersContainer');
+        const answerCard = document.createElement('div');
+        answerCard.className = 'answer-card';
+        answerCard.innerHTML = `
+            <div class="answer-question">🤖 ${data.question}</div>
+            <div class="answer-meta">
+                <span class="meta-badge">⚡ Auto-detected</span>
+                <span class="meta-badge">⏱️ ${data.time_ms}ms</span>
+            </div>
+            <div class="star-content">${formatContent(data.answer, 'bullets')}</div>
+        `;
+        answersContainer.insertBefore(answerCard, answersContainer.firstChild);
+        showMessage(`Auto-answer: "${data.question.substring(0, 40)}..."`, 'info');
     });
 
     socket.on('answer_ready', function(data) {

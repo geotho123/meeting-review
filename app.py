@@ -338,11 +338,42 @@ def transcribe_audio(filepath):
         result = transcriber.transcribe_audio(filepath, save_transcript=True)
         transcription_time = int((time.time() - start_time) * 1000)  # milliseconds
 
+        transcript_text = result['text']
+
+        # Detect questions in the transcript (even in non-live mode)
+        from realtime_processor import QuestionDetector
+        questions = QuestionDetector.extract_questions(transcript_text)
+
+        print(f"[Transcription] Found {len(questions)} questions in transcript")
+
         socketio.emit('transcription_complete', {
-            'text': result['text'],
+            'text': transcript_text,
             'file_path': result.get('file_path'),
-            'time_ms': transcription_time
+            'time_ms': transcription_time,
+            'questions_detected': len(questions)
         })
+
+        # Auto-generate answers for detected questions
+        if questions and len(questions) > 0:
+            socketio.emit('status', {
+                'message': f'Found {len(questions)} questions, generating answers...',
+                'type': 'info'
+            })
+
+            for question in questions[:5]:  # Limit to first 5 questions
+                try:
+                    print(f"[Transcription] Generating answer for: {question[:60]}...")
+                    answer_start = time.time()
+                    answer = ai_assistant.quick_answer(question, transcript_text, 'bullets')
+                    answer_time = int((time.time() - answer_start) * 1000)
+
+                    socketio.emit('auto_answer', {
+                        'question': question,
+                        'answer': answer,
+                        'time_ms': answer_time
+                    })
+                except Exception as e:
+                    print(f"[Transcription] Error generating answer: {e}")
 
     except Exception as e:
         print(f"Transcription error: {e}")
