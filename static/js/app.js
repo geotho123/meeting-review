@@ -1,0 +1,360 @@
+// Global state
+let socket;
+let currentTranscript = '';
+let selectedDuration = 120;
+let selectedFormat = 'bullets';
+
+// Initialize socket connection
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSocket();
+    setupEventListeners();
+});
+
+function initializeSocket() {
+    socket = io();
+
+    socket.on('connect', function() {
+        console.log('Connected to server');
+        showMessage('Connected to server', 'success');
+    });
+
+    socket.on('disconnect', function() {
+        console.log('Disconnected from server');
+        showMessage('Disconnected from server', 'error');
+    });
+
+    socket.on('status', function(data) {
+        console.log('Status:', data);
+        updateStatus(data.message, data.type);
+    });
+
+    socket.on('error', function(data) {
+        console.error('Error:', data);
+        showMessage(data.message, 'error');
+        resetRecordingUI();
+    });
+
+    socket.on('recording_progress', function(data) {
+        updateProgress(data.elapsed, data.duration);
+    });
+
+    socket.on('recording_complete', function(data) {
+        console.log('Recording complete:', data);
+        showMessage(`Recording saved: ${data.filename}`, 'success');
+        resetRecordingUI();
+    });
+
+    socket.on('transcription_complete', function(data) {
+        console.log('Transcription complete:', data);
+        currentTranscript = data.text;
+        displayTranscript(data.text, data.time_ms);
+        showQASection();
+        showMessage(`Transcription completed in ${data.time_ms}ms`, 'success');
+    });
+
+    socket.on('answer_ready', function(data) {
+        console.log('Answer ready:', data);
+        displayAnswer(data);
+        showMessage(`Answer generated in ${data.time_ms}ms`, 'success');
+    });
+
+    socket.on('quick_answer_ready', function(data) {
+        console.log('Quick answer ready:', data);
+        displayQuickAnswer(data);
+        showMessage(`Quick answer generated in ${data.time_ms}ms`, 'success');
+    });
+}
+
+function setupEventListeners() {
+    // Duration selection
+    document.querySelectorAll('.duration-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const duration = this.getAttribute('data-duration');
+            if (duration === 'custom') {
+                document.getElementById('customDuration').style.display = 'block';
+            } else {
+                document.getElementById('customDuration').style.display = 'none';
+                selectedDuration = parseInt(duration);
+            }
+        });
+    });
+
+    // Custom duration input
+    document.getElementById('customDuration').addEventListener('change', function() {
+        selectedDuration = parseInt(this.value);
+    });
+
+    // Format selection
+    document.querySelectorAll('.format-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedFormat = this.getAttribute('data-format');
+        });
+    });
+
+    // Recording controls
+    document.getElementById('startBtn').addEventListener('click', startRecording);
+    document.getElementById('stopBtn').addEventListener('click', stopRecording);
+
+    // Q&A
+    document.getElementById('askBtn').addEventListener('click', askQuestion);
+    document.getElementById('questionInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            askQuestion();
+        }
+    });
+
+    // Quick questions
+    document.querySelectorAll('.quick-question-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('questionInput').value = this.textContent;
+            askQuestion();
+        });
+    });
+}
+
+function startRecording() {
+    console.log('Starting recording for', selectedDuration, 'seconds');
+
+    // Update UI
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+
+    const statusIndicator = document.querySelector('.status-indicator');
+    statusIndicator.classList.add('recording');
+
+    // Show progress bar
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.display = 'block';
+    document.querySelector('.progress-fill').style.width = '0%';
+
+    // Emit start recording event
+    socket.emit('start_recording', {
+        duration: selectedDuration
+    });
+
+    updateStatus('Recording...', 'recording');
+}
+
+function stopRecording() {
+    console.log('Stopping recording');
+
+    socket.emit('stop_recording');
+    resetRecordingUI();
+}
+
+function resetRecordingUI() {
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+
+    const statusIndicator = document.querySelector('.status-indicator');
+    statusIndicator.classList.remove('recording');
+
+    updateStatus('Ready to record', 'ready');
+}
+
+function updateProgress(elapsed, duration) {
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.querySelector('.progress-fill');
+    const progressText = document.querySelector('.progress-text');
+
+    const percentage = (elapsed / duration) * 100;
+    progressFill.style.width = `${percentage}%`;
+    progressText.textContent = `${elapsed}s / ${duration}s`;
+}
+
+function updateStatus(message, type) {
+    const statusText = document.querySelector('.status-text');
+    statusText.textContent = message;
+
+    const statusIndicator = document.querySelector('.status-indicator');
+    statusIndicator.className = 'status-indicator';
+
+    if (type === 'recording') {
+        statusIndicator.classList.add('recording');
+    } else if (type === 'processing' || type === 'info') {
+        statusIndicator.classList.add('processing');
+    }
+}
+
+function displayTranscript(text, timeMs) {
+    const transcriptSection = document.getElementById('transcriptSection');
+    const transcriptDisplay = document.getElementById('transcriptDisplay');
+    const transcriptionTime = document.getElementById('transcriptionTime');
+
+    transcriptSection.style.display = 'block';
+    transcriptDisplay.innerHTML = `<p>${text}</p>`;
+    transcriptionTime.textContent = `Transcribed in ${timeMs}ms`;
+}
+
+function showQASection() {
+    document.getElementById('qaSection').style.display = 'block';
+    document.getElementById('commonQuestions').style.display = 'block';
+}
+
+function askQuestion() {
+    const question = document.getElementById('questionInput').value.trim();
+
+    if (!question) {
+        showMessage('Please enter a question', 'error');
+        return;
+    }
+
+    if (!currentTranscript) {
+        showMessage('No transcript available. Please record first.', 'error');
+        return;
+    }
+
+    console.log('Asking question:', question);
+    showMessage('Generating STAR format answer...', 'info');
+
+    // Disable ask button temporarily
+    const askBtn = document.getElementById('askBtn');
+    askBtn.disabled = true;
+    setTimeout(() => askBtn.disabled = false, 2000);
+
+    socket.emit('get_answer', {
+        question: question,
+        transcript: currentTranscript,
+        format: selectedFormat
+    });
+}
+
+function displayAnswer(data) {
+    const answersContainer = document.getElementById('answersContainer');
+
+    const answerCard = document.createElement('div');
+    answerCard.className = 'answer-card';
+
+    const components = data.components;
+
+    answerCard.innerHTML = `
+        <div class="answer-question">${data.question}</div>
+        <div class="answer-meta">
+            <span class="meta-badge">⏱️ ${data.time_ms}ms</span>
+            <span class="meta-badge">🤖 ${data.provider.toUpperCase()}</span>
+            <span class="meta-badge">📋 ${data.format_type}</span>
+        </div>
+
+        ${components.situation ? `
+        <div class="star-section">
+            <h4>📍 Situation</h4>
+            <div class="star-content">${formatContent(components.situation, data.format_type)}</div>
+        </div>` : ''}
+
+        ${components.task ? `
+        <div class="star-section">
+            <h4>🎯 Task</h4>
+            <div class="star-content">${formatContent(components.task, data.format_type)}</div>
+        </div>` : ''}
+
+        ${components.action ? `
+        <div class="star-section">
+            <h4>⚡ Action</h4>
+            <div class="star-content">${formatContent(components.action, data.format_type)}</div>
+        </div>` : ''}
+
+        ${components.result ? `
+        <div class="star-section">
+            <h4>🏆 Result</h4>
+            <div class="star-content">${formatContent(components.result, data.format_type)}</div>
+        </div>` : ''}
+    `;
+
+    answersContainer.insertBefore(answerCard, answersContainer.firstChild);
+}
+
+function displayQuickAnswer(data) {
+    const answersContainer = document.getElementById('answersContainer');
+
+    const answerCard = document.createElement('div');
+    answerCard.className = 'answer-card';
+
+    answerCard.innerHTML = `
+        <div class="answer-question">${data.question}</div>
+        <div class="answer-meta">
+            <span class="meta-badge">⚡ Quick Answer</span>
+            <span class="meta-badge">⏱️ ${data.time_ms}ms</span>
+            <span class="meta-badge">🤖 ${data.provider.toUpperCase()}</span>
+        </div>
+        <div class="star-content">${formatContent(data.answer, data.format_type)}</div>
+    `;
+
+    answersContainer.insertBefore(answerCard, answersContainer.firstChild);
+}
+
+function formatContent(content, formatType) {
+    if (formatType === 'bullets') {
+        // Convert lines starting with - or * to proper list items
+        const lines = content.split('\n');
+        let formatted = '';
+        let inList = false;
+
+        for (let line of lines) {
+            line = line.trim();
+            if (line.startsWith('-') || line.startsWith('*')) {
+                if (!inList) {
+                    formatted += '<ul>';
+                    inList = true;
+                }
+                formatted += `<li>${line.substring(1).trim()}</li>`;
+            } else if (line) {
+                if (inList) {
+                    formatted += '</ul>';
+                    inList = false;
+                }
+                formatted += `<p>${line}</p>`;
+            }
+        }
+
+        if (inList) {
+            formatted += '</ul>';
+        }
+
+        return formatted || content;
+    } else {
+        // For full format, just preserve paragraphs
+        return content.split('\n').filter(p => p.trim())
+            .map(p => `<p>${p.trim()}</p>`).join('');
+    }
+}
+
+function showMessage(message, type) {
+    // Remove existing messages
+    const existingMessages = document.querySelectorAll('.message');
+    existingMessages.forEach(msg => {
+        if (msg.parentNode) {
+            msg.remove();
+        }
+    });
+
+    // Create new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+
+    // Insert at the top of main
+    const main = document.querySelector('main');
+    main.insertBefore(messageDiv, main.firstChild);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 300);
+    }, 5000);
+}
+
+// Helper function to format time
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}

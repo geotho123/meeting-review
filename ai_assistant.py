@@ -242,3 +242,191 @@ clear, professional answers to questions. Provide thoughtful, complete responses
         except Exception as e:
             print(f"Error extracting Q&A: {e}")
             raise
+
+    def generate_star_answer(self, question, transcript, format_type="full"):
+        """
+        Generate an answer in STAR format (Situation, Task, Action, Result).
+
+        Args:
+            question: The question to answer
+            transcript: The meeting/interview transcript
+            format_type: "full" for complete sentences or "bullets" for bullet points
+
+        Returns:
+            dict: STAR formatted answer with components
+        """
+        if format_type == "bullets":
+            prompt = f"""Based on this transcript, answer the following question using the STAR format.
+Provide your answer in CONCISE bullet points.
+
+Question: {question}
+
+Format your response as:
+**Situation:**
+- [Key point about the situation]
+- [Additional context if needed]
+
+**Task:**
+- [What needed to be accomplished]
+- [Specific objectives]
+
+**Action:**
+- [Specific action taken]
+- [Steps involved]
+- [Methods used]
+
+**Result:**
+- [Measurable outcome]
+- [Impact achieved]
+
+Transcript:
+{transcript}
+
+Provide a brief, focused STAR answer based on the information available."""
+
+        else:  # full format
+            prompt = f"""Based on this transcript, answer the following question using the STAR format.
+Provide your answer in complete, professional sentences.
+
+Question: {question}
+
+Format your response as:
+**Situation:** [Describe the context and background in 2-3 sentences]
+
+**Task:** [Explain what needed to be accomplished in 1-2 sentences]
+
+**Action:** [Detail the specific actions taken in 2-4 sentences]
+
+**Result:** [Describe the outcome and impact in 2-3 sentences]
+
+Transcript:
+{transcript}
+
+Provide a comprehensive STAR answer based on the information available."""
+
+        system_prompt = """You are an expert interview coach specializing in STAR method responses.
+Create compelling, structured answers that demonstrate clear problem-solving and results."""
+
+        try:
+            if self.provider == "claude":
+                response = self._ask_claude(system_prompt, prompt)
+            else:
+                response = self._ask_chatgpt(system_prompt, prompt)
+
+            # Parse the response into components
+            components = self._parse_star_response(response)
+            return {
+                "full_response": response,
+                "components": components,
+                "format_type": format_type
+            }
+
+        except Exception as e:
+            print(f"Error generating STAR answer: {e}")
+            raise
+
+    def _parse_star_response(self, response):
+        """Parse STAR response into components."""
+        components = {
+            "situation": "",
+            "task": "",
+            "action": "",
+            "result": ""
+        }
+
+        lines = response.split("\n")
+        current_section = None
+
+        for line in lines:
+            line_lower = line.lower().strip()
+            if line_lower.startswith("**situation"):
+                current_section = "situation"
+                # Extract content after the header if present
+                if ":" in line:
+                    content = line.split(":", 1)[1].strip()
+                    if content and not content.startswith("**"):
+                        components[current_section] += content + "\n"
+            elif line_lower.startswith("**task"):
+                current_section = "task"
+                if ":" in line:
+                    content = line.split(":", 1)[1].strip()
+                    if content and not content.startswith("**"):
+                        components[current_section] += content + "\n"
+            elif line_lower.startswith("**action"):
+                current_section = "action"
+                if ":" in line:
+                    content = line.split(":", 1)[1].strip()
+                    if content and not content.startswith("**"):
+                        components[current_section] += content + "\n"
+            elif line_lower.startswith("**result"):
+                current_section = "result"
+                if ":" in line:
+                    content = line.split(":", 1)[1].strip()
+                    if content and not content.startswith("**"):
+                        components[current_section] += content + "\n"
+            elif current_section and line.strip() and not line.strip().startswith("**"):
+                components[current_section] += line.strip() + "\n"
+
+        # Clean up whitespace
+        for key in components:
+            components[key] = components[key].strip()
+
+        return components
+
+    def quick_answer(self, question, transcript, format_type="bullets"):
+        """
+        Generate a quick answer optimized for speed.
+
+        Args:
+            question: The question to answer
+            transcript: The transcript (can be partial)
+            format_type: "bullets" or "full"
+
+        Returns:
+            str: Quick answer
+        """
+        # For quick answers, we use a simpler prompt and lower max_tokens
+        if format_type == "bullets":
+            prompt = f"""Question: {question}
+
+Based on this transcript excerpt, provide a brief STAR format answer in bullet points.
+
+Transcript:
+{transcript[:3000]}  # Limit to first 3000 chars for speed
+
+Be concise and focus on key points only."""
+        else:
+            prompt = f"""Question: {question}
+
+Based on this transcript excerpt, provide a STAR format answer in 2-3 sentences per section.
+
+Transcript:
+{transcript[:3000]}
+
+Be concise and professional."""
+
+        system_prompt = "Provide concise, focused STAR format answers quickly."
+
+        try:
+            if self.provider == "claude":
+                response = self.client.messages.create(
+                    model=self.model,
+                    max_tokens=1024,  # Reduced for speed
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                return response.content[0].text
+            else:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=1024  # Reduced for speed
+                )
+                return response.choices[0].message.content
+
+        except Exception as e:
+            print(f"Error generating quick answer: {e}")
+            raise

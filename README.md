@@ -1,13 +1,57 @@
 # Meeting Recorder with AI-Powered Q&A
 
-A powerful application that records meetings, transcribes them using OpenAI Whisper, and provides AI-powered answers to your questions using Claude or ChatGPT.
+A powerful application that records meetings, transcribes them using OpenAI Whisper, and provides AI-powered answers in **STAR format** (Situation, Task, Action, Result) using Claude or ChatGPT.
 
-## Features
+## ✨ Features
 
-- **Audio Recording**: Record meetings with high-quality audio
-- **Speech-to-Text**: Automatic transcription using OpenAI Whisper API
-- **AI-Powered Analysis**: Get answers to questions using Claude or ChatGPT
-- **Multiple Modes**:
+- **🎙️ Real-Time Audio Recording**: Record meetings with high-quality audio in 60s, 120s, or custom durations
+- **🚀 Lightning-Fast Transcription**: Speech-to-text using OpenAI Whisper API with millisecond performance tracking
+- **⭐ STAR Format Answers**: Get professional interview-style answers in STAR format
+- **💡 Dual Answer Formats**: Choose between bullet points or full paragraph answers
+- **🎨 Beautiful Web UI**: Modern, intuitive web interface with real-time updates
+- **⚡ Real-Time Processing**: WebSocket-based live updates for recording, transcription, and answer generation
+- **🤖 AI Provider Choice**: Use Claude or ChatGPT based on your preference
+- **📱 Responsive Design**: Works on desktop, tablet, and mobile devices
+
+## 🖥️ Web UI (Recommended)
+
+The easiest way to use the Meeting Recorder is through the web interface!
+
+### Quick Start (Web UI)
+
+1. **Install dependencies** (see Installation section below)
+
+2. **Configure your API keys** in `.env` file
+
+3. **Start the web server**:
+   ```bash
+   python app.py
+   ```
+
+4. **Open your browser** to `http://localhost:5000`
+
+5. **Start recording!**
+   - Select duration (60s, 120s, 180s, or custom)
+   - Click "Start Recording"
+   - Speak naturally
+   - Recording stops automatically or click "Stop"
+   - Transcription happens automatically
+   - Ask questions and get instant STAR format answers!
+
+### Web UI Features
+
+- **Real-time recording** with visual progress indicators
+- **Automatic transcription** with performance metrics (shows time in milliseconds)
+- **STAR format answers** - perfect for interview preparation
+- **Quick question templates** for common interview questions
+- **Live status updates** via WebSocket
+- **Beautiful gradient UI** with smooth animations
+
+## 📋 Command Line Interface
+
+For advanced users and automation, use the CLI:
+
+### CLI Modes
   - Full workflow (record → transcribe → analyze)
   - Record only
   - Transcribe existing audio
@@ -158,6 +202,57 @@ Show help:
 python meeting_recorder.py --help
 ```
 
+## ⭐ STAR Format Answers
+
+The application specializes in generating answers in **STAR format** - perfect for interview preparation!
+
+### What is STAR Format?
+
+STAR stands for:
+- **S**ituation: The context or background
+- **T**ask: What needed to be accomplished
+- **A**ction: The specific steps taken
+- **R**esult: The outcome and impact
+
+### Answer Formats
+
+**Bullet Points** (Fast, concise):
+```
+Situation:
+- Key point about context
+- Additional background
+
+Task:
+- What needed to be done
+- Specific objectives
+
+Action:
+- Steps taken
+- Methods used
+
+Result:
+- Measurable outcome
+- Impact achieved
+```
+
+**Full Paragraphs** (Detailed, professional):
+Each section contains 2-4 complete sentences providing comprehensive details.
+
+### Performance
+
+The web UI shows generation time in **milliseconds** for each answer, typically:
+- Bullet format: 1-3 seconds
+- Full format: 2-5 seconds
+- Quick answers: Under 2 seconds
+
+### Example Questions
+
+- "Tell me about a challenging situation you faced"
+- "Describe a time you showed leadership"
+- "How do you handle conflict in a team?"
+- "Describe a project you're proud of"
+- "Tell me about a time you failed and what you learned"
+
 ## Use Cases
 
 ### 1. Meeting Documentation
@@ -188,16 +283,24 @@ python meeting_recorder.py --help
 
 ```
 meeting-review/
-├── meeting_recorder.py      # Main application
-├── audio_recorder.py         # Audio recording module
-├── transcription.py          # Speech-to-text module
-├── ai_assistant.py          # AI Q&A module
+├── app.py                   # Flask web application (WEB UI)
+├── meeting_recorder.py      # Command-line application
+├── audio_recorder.py        # Audio recording module
+├── transcription.py         # Speech-to-text module (Whisper API)
+├── ai_assistant.py          # AI Q&A module (Claude/ChatGPT + STAR format)
 ├── config.py                # Configuration management
 ├── requirements.txt         # Python dependencies
 ├── .env                     # Configuration (you create this)
-├── .env.example            # Configuration template
-├── recordings/             # Saved audio files (created automatically)
-└── transcripts/            # Saved transcripts (created automatically)
+├── .env.example             # Configuration template
+├── templates/               # HTML templates for web UI
+│   └── index.html           # Main web interface
+├── static/                  # Static web assets
+│   ├── css/
+│   │   └── style.css        # Web UI styling
+│   └── js/
+│       └── app.js           # Frontend JavaScript (WebSocket, UI logic)
+├── recordings/              # Saved audio files (created automatically)
+└── transcripts/             # Saved transcripts (created automatically)
 ```
 
 ## Configuration Options
