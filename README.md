@@ -65,8 +65,34 @@ For advanced users and automation, use the CLI:
 - Python 3.8 or higher
 - An OpenAI API key (for transcription with Whisper)
 - An Anthropic API key (for Claude) OR OpenAI API key (for ChatGPT)
+- (Optional) [uv](https://github.com/astral-sh/uv) - for faster installation
 
 ## Installation
+
+### Quick Install with UV (Recommended ⚡)
+
+UV is 10-100x faster than pip! [Learn more](UV_SETUP.md)
+
+```bash
+# 1. Install uv (one-time)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Clone repository
+git clone <repository-url>
+cd meeting-review
+
+# 3. Install dependencies (creates .venv automatically)
+uv sync
+
+# 4. Setup configuration
+cp .env.example .env
+# Edit .env with your API keys
+
+# 5. Run!
+uv run python app.py
+```
+
+### Traditional Install with pip
 
 1. **Clone the repository**:
    ```bash

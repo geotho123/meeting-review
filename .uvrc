@@ -1,0 +1,12 @@
+# UV Configuration for Meeting Recorder
+# This file contains UV-specific settings
+
+[tool.uv]
+# Use Python 3.8 or higher
+python-version = ">=3.8"
+
+# Prefer binary distributions for faster installs
+prefer-binary = true
+
+# Show more detailed output
+verbose = false
