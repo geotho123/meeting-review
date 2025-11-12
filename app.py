@@ -124,12 +124,31 @@ def record_audio(duration):
             recording_state['audio_data'].append(indata.copy())
 
     try:
-        # Create audio stream
-        stream = sd.InputStream(
-            samplerate=config.sample_rate,
-            channels=config.channels,
-            callback=audio_callback
-        )
+        # Create audio stream - try configured channels first, fallback to mono
+        channels = config.channels
+        try:
+            stream = sd.InputStream(
+                samplerate=config.sample_rate,
+                channels=channels,
+                callback=audio_callback
+            )
+        except Exception as e:
+            if channels == 2:
+                # Fallback to mono if stereo fails
+                print(f"Stereo recording failed, falling back to mono: {e}")
+                socketio.emit('status', {
+                    'message': 'Stereo not supported, using mono recording',
+                    'type': 'info'
+                })
+                channels = 1
+                stream = sd.InputStream(
+                    samplerate=config.sample_rate,
+                    channels=channels,
+                    callback=audio_callback
+                )
+            else:
+                raise
+
         recording_state['stream'] = stream
         stream.start()
 
