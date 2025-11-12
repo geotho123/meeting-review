@@ -23,12 +23,26 @@
                 <h2>📹 Recording</h2>
 
                 <div class="recording-controls">
+                    <!-- Live Mode Toggle -->
+                    <div class="mode-selector">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="liveModeToggle" class="toggle-input">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">
+                                <span class="mode-icon">⚡</span>
+                                <strong>LIVE MODE</strong> - Real-time transcription & instant answers (perfect for 30-45 min interviews!)
+                            </span>
+                        </label>
+                    </div>
+
                     <div class="duration-selector">
                         <label>Recording Duration:</label>
                         <div class="duration-buttons">
                             <button class="duration-btn" data-duration="60">60s</button>
                             <button class="duration-btn active" data-duration="120">120s</button>
                             <button class="duration-btn" data-duration="180">180s</button>
+                            <button class="duration-btn" data-duration="1800">30 min</button>
+                            <button class="duration-btn" data-duration="2700">45 min</button>
                             <button class="duration-btn" data-duration="custom">Custom</button>
                         </div>
                         <input type="number" id="customDuration" placeholder="seconds" style="display: none;">
@@ -66,6 +80,26 @@
                 </div>
                 <div class="transcript-meta">
                     <span id="transcriptionTime" class="meta-info"></span>
+                </div>
+            </section>
+
+            <!-- Live Transcript Section (Real-time Mode) -->
+            <section class="card live-section" id="liveSection" style="display: none;">
+                <h2>⚡ Live Transcript</h2>
+                <div class="live-status">
+                    <span class="live-badge">🔴 LIVE</span>
+                    <span id="liveStats" class="live-stats">Listening...</span>
+                </div>
+                <div id="liveTranscriptDisplay" class="live-transcript-display">
+                    <p class="placeholder-text">Speak naturally... Questions will be detected automatically!</p>
+                </div>
+            </section>
+
+            <!-- Live Questions & Answers (Real-time Mode) -->
+            <section class="card live-qa-section" id="liveQASection" style="display: none;">
+                <h2>💡 Live Questions & Instant Answers</h2>
+                <div id="liveQuestionsContainer" class="live-questions-container">
+                    <p class="placeholder-text">Detected questions and answers will appear here in real-time...</p>
                 </div>
             </section>
 
@@ -118,6 +152,7 @@
         </footer>
     </div>
 
+    <script src="{{ url_for('static', filename='js/live_mode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
