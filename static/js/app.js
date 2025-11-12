@@ -69,8 +69,19 @@ function initializeSocket() {
 
     socket.on('auto_answer', function(data) {
         console.log('Auto answer received:', data);
-        // Display as a simple answer card
+        // Display as a simple answer card - ensure it appears at the top
         const answersContainer = document.getElementById('answersContainer');
+        if (!answersContainer) {
+            console.error('answersContainer not found');
+            return;
+        }
+
+        // Clear placeholder if present
+        const placeholder = answersContainer.querySelector('.placeholder-text');
+        if (placeholder) {
+            placeholder.remove();
+        }
+
         const answerCard = document.createElement('div');
         answerCard.className = 'answer-card';
         answerCard.innerHTML = `
@@ -81,6 +92,7 @@ function initializeSocket() {
             </div>
             <div class="star-content">${formatContent(data.answer, 'bullets')}</div>
         `;
+        // Insert at top (latest first)
         answersContainer.insertBefore(answerCard, answersContainer.firstChild);
         showMessage(`Auto-answer: "${data.question.substring(0, 40)}..."`, 'info');
     });
@@ -123,26 +135,41 @@ function initializeSocket() {
 function setupEventListeners() {
     console.log('Setting up event listeners...');
 
-    // Duration selection
-    document.querySelectorAll('.duration-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-
-            const duration = this.getAttribute('data-duration');
-            if (duration === 'custom') {
-                document.getElementById('customDuration').style.display = 'block';
-            } else {
-                document.getElementById('customDuration').style.display = 'none';
-                selectedDuration = parseInt(duration);
-            }
+    // Duration selection - handle both dropdown and button formats
+    const durationSelect = document.getElementById('durationSelect');
+    if (durationSelect) {
+        // New dropdown format
+        durationSelect.addEventListener('change', function() {
+            selectedDuration = parseInt(this.value);
+            console.log('Duration selected:', selectedDuration);
         });
-    });
+    } else {
+        // Old button format (fallback for compatibility)
+        document.querySelectorAll('.duration-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
 
-    // Custom duration input
-    document.getElementById('customDuration').addEventListener('change', function() {
-        selectedDuration = parseInt(this.value);
-    });
+                const duration = this.getAttribute('data-duration');
+                if (duration === 'custom') {
+                    const customInput = document.getElementById('customDuration');
+                    if (customInput) customInput.style.display = 'block';
+                } else {
+                    const customInput = document.getElementById('customDuration');
+                    if (customInput) customInput.style.display = 'none';
+                    selectedDuration = parseInt(duration);
+                }
+            });
+        });
+
+        // Custom duration input
+        const customDuration = document.getElementById('customDuration');
+        if (customDuration) {
+            customDuration.addEventListener('change', function() {
+                selectedDuration = parseInt(this.value);
+            });
+        }
+    }
 
     // Format selection
     document.querySelectorAll('.format-btn').forEach(btn => {
@@ -171,19 +198,29 @@ function setupEventListeners() {
         console.error('Stop button not found!');
     }
 
-    // Q&A
-    document.getElementById('askBtn').addEventListener('click', askQuestion);
-    document.getElementById('questionInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            askQuestion();
-        }
-    });
+    // Q&A - handle optional elements
+    const askBtn = document.getElementById('askBtn');
+    if (askBtn) {
+        askBtn.addEventListener('click', askQuestion);
+    }
 
-    // Quick questions
+    const questionInput = document.getElementById('questionInput');
+    if (questionInput) {
+        questionInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                askQuestion();
+            }
+        });
+    }
+
+    // Quick questions (optional)
     document.querySelectorAll('.quick-question-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.getElementById('questionInput').value = this.textContent;
-            askQuestion();
+            const input = document.getElementById('questionInput');
+            if (input) {
+                input.value = this.textContent;
+                askQuestion();
+            }
         });
     });
 }
@@ -214,12 +251,24 @@ function startRecording() {
 
     // Show live sections if in live mode
     if (liveModeEnabled) {
-        document.getElementById('liveSection').style.display = 'block';
-        document.getElementById('liveQASection').style.display = 'block';
+        // Show old-style sections if they exist
+        const liveSection = document.getElementById('liveSection');
+        if (liveSection) liveSection.style.display = 'block';
 
-        // Clear previous data
-        document.getElementById('liveTranscriptDisplay').innerHTML = '<p class="placeholder-text">Listening for speech...</p>';
-        document.getElementById('liveQuestionsContainer').innerHTML = '<p class="placeholder-text">Questions will appear here...</p>';
+        const liveQASection = document.getElementById('liveQASection');
+        if (liveQASection) liveQASection.style.display = 'block';
+
+        // Clear previous data from all live displays
+        const liveTranscriptDisplay = document.getElementById('liveTranscriptDisplay');
+        if (liveTranscriptDisplay) {
+            liveTranscriptDisplay.innerHTML = '<p class="placeholder-text">Listening for speech...</p>';
+        }
+
+        const liveQuestionsContainer = document.getElementById('liveQuestionsContainer');
+        if (liveQuestionsContainer) {
+            liveQuestionsContainer.innerHTML = '<p class="placeholder-text">Questions will appear here...</p>';
+        }
+
         liveTranscript = '';
         detectedQuestions = [];
     }
@@ -285,8 +334,15 @@ function displayTranscript(text, timeMs) {
 }
 
 function showQASection() {
-    document.getElementById('qaSection').style.display = 'block';
-    document.getElementById('commonQuestions').style.display = 'block';
+    // Show Q&A sections if they exist (optional in new layout)
+    const qaSection = document.getElementById('qaSection');
+    if (qaSection) qaSection.style.display = 'block';
+
+    const commonQuestions = document.getElementById('commonQuestions');
+    if (commonQuestions) commonQuestions.style.display = 'block';
+
+    const manualQASection = document.getElementById('manualQASection');
+    if (manualQASection) manualQASection.style.display = 'block';
 }
 
 function askQuestion() {
@@ -430,9 +486,16 @@ function showMessage(message, type) {
     messageDiv.className = `message ${type}`;
     messageDiv.textContent = message;
 
-    // Insert at the top of main
-    const main = document.querySelector('main');
-    main.insertBefore(messageDiv, main.firstChild);
+    // Insert at the top of container (try main first, then container)
+    let container = document.querySelector('main');
+    if (!container) {
+        container = document.querySelector('.container');
+    }
+    if (!container) {
+        container = document.body;
+    }
+
+    container.insertBefore(messageDiv, container.firstChild);
 
     // Auto-remove after 5 seconds
     setTimeout(() => {

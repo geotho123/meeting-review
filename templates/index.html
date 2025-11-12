@@ -8,151 +8,148 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎙️ Meeting Recorder</h1>
-            <p class="subtitle">Record meetings and get instant STAR format answers</p>
-            <div class="ai-badge">
+    <div class="container" id="mainContainer">
+        <!-- Compact Header for Interview Mode -->
+        <header class="compact-header">
+            <div class="header-left">
+                <h1>🎙️ Meeting Recorder</h1>
                 <span class="badge">AI: {{ ai_provider }}</span>
+            </div>
+            <div class="header-right">
+                <button id="layoutToggle" class="btn btn-layout" title="Toggle Interview Layout">
+                    <span class="icon">⚡</span> Interview Mode
+                </button>
             </div>
         </header>
 
-        <main>
-            <!-- Recording Section -->
-            <section class="card recording-section">
-                <h2>📹 Recording</h2>
-
-                <div class="recording-controls">
-                    <!-- Live Mode Toggle -->
-                    <div class="mode-selector">
-                        <label class="toggle-label">
-                            <input type="checkbox" id="liveModeToggle" class="toggle-input">
-                            <span class="toggle-slider"></span>
-                            <span class="toggle-text">
-                                <span class="mode-icon">⚡</span>
-                                <strong>LIVE MODE</strong> - Real-time transcription & instant answers (perfect for 30-45 min interviews!)
-                            </span>
-                        </label>
-                    </div>
-
-                    <div class="duration-selector">
-                        <label>Recording Duration:</label>
-                        <div class="duration-buttons">
-                            <button class="duration-btn" data-duration="60">60s</button>
-                            <button class="duration-btn active" data-duration="120">120s</button>
-                            <button class="duration-btn" data-duration="180">180s</button>
-                            <button class="duration-btn" data-duration="1800">30 min</button>
-                            <button class="duration-btn" data-duration="2700">45 min</button>
-                            <button class="duration-btn" data-duration="custom">Custom</button>
+        <!-- Main Content Area -->
+        <div class="content-wrapper" id="contentWrapper">
+            <!-- Left Panel: Controls & Recording -->
+            <div class="left-panel" id="leftPanel">
+                <!-- Recording Controls (Compact) -->
+                <section class="card recording-section-compact">
+                    <div class="recording-controls-compact">
+                        <!-- Live Mode Toggle -->
+                        <div class="mode-selector-compact">
+                            <label class="toggle-label-compact">
+                                <input type="checkbox" id="liveModeToggle" class="toggle-input">
+                                <span class="toggle-text-compact">
+                                    <strong>LIVE MODE</strong>
+                                </span>
+                            </label>
                         </div>
-                        <input type="number" id="customDuration" placeholder="seconds" style="display: none;">
-                    </div>
 
-                    <div class="control-buttons">
-                        <button id="startBtn" class="btn btn-primary btn-large">
-                            <span class="icon">●</span> Start Recording
-                        </button>
-                        <button id="stopBtn" class="btn btn-danger btn-large" disabled>
-                            <span class="icon">■</span> Stop Recording
-                        </button>
-                    </div>
+                        <!-- Duration & Controls in one row -->
+                        <div class="controls-row">
+                            <select id="durationSelect" class="duration-select">
+                                <option value="60">60s</option>
+                                <option value="120" selected>120s</option>
+                                <option value="180">180s</option>
+                                <option value="1800">30 min</option>
+                                <option value="2700">45 min</option>
+                            </select>
 
-                    <div id="recordingStatus" class="status-display">
-                        <div class="status-indicator"></div>
-                        <span class="status-text">Ready to record</span>
-                    </div>
-
-                    <div id="progressBar" class="progress-bar" style="display: none;">
-                        <div class="progress-fill"></div>
-                        <span class="progress-text">0s / 0s</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Transcript Section -->
-            <section class="card transcript-section" id="transcriptSection" style="display: none;">
-                <h2>📝 Transcript</h2>
-                <div id="transcriptDisplay" class="transcript-display">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Transcribing audio...</p>
-                    </div>
-                </div>
-                <div class="transcript-meta">
-                    <span id="transcriptionTime" class="meta-info"></span>
-                </div>
-            </section>
-
-            <!-- Live Transcript Section (Real-time Mode) -->
-            <section class="card live-section" id="liveSection" style="display: none;">
-                <h2>⚡ Live Transcript</h2>
-                <div class="live-status">
-                    <span class="live-badge">🔴 LIVE</span>
-                    <span id="liveStats" class="live-stats">Listening...</span>
-                </div>
-                <div id="liveTranscriptDisplay" class="live-transcript-display">
-                    <p class="placeholder-text">Speak naturally... Questions will be detected automatically!</p>
-                </div>
-            </section>
-
-            <!-- Live Questions & Answers (Real-time Mode) -->
-            <section class="card live-qa-section" id="liveQASection" style="display: none;">
-                <h2>💡 Live Questions & Instant Answers</h2>
-                <div id="liveQuestionsContainer" class="live-questions-container">
-                    <p class="placeholder-text">Detected questions and answers will appear here in real-time...</p>
-                </div>
-            </section>
-
-            <!-- Q&A Section -->
-            <section class="card qa-section" id="qaSection" style="display: none;">
-                <h2>💬 Ask Questions (STAR Format)</h2>
-
-                <div class="question-input-group">
-                    <input type="text" id="questionInput" class="question-input"
-                           placeholder="Ask a question (e.g., 'Tell me about a challenging situation...')">
-
-                    <div class="format-selector">
-                        <label>Answer Format:</label>
-                        <div class="format-buttons">
-                            <button class="format-btn active" data-format="bullets">
-                                📋 Bullets
+                            <button id="startBtn" class="btn btn-primary btn-compact">
+                                <span class="icon">●</span> Start
                             </button>
-                            <button class="format-btn" data-format="full">
-                                📄 Full
+                            <button id="stopBtn" class="btn btn-danger btn-compact" disabled>
+                                <span class="icon">■</span> Stop
                             </button>
                         </div>
+
+                        <div id="recordingStatus" class="status-display-compact">
+                            <div class="status-indicator"></div>
+                            <span class="status-text">Ready</span>
+                        </div>
+
+                        <div id="progressBar" class="progress-bar-compact" style="display: none;">
+                            <div class="progress-fill"></div>
+                            <span class="progress-text">0s / 0s</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Live Transcript (Collapsible) -->
+                <section class="card transcript-section-compact" id="transcriptSection" style="display: none;">
+                    <div class="section-header">
+                        <h3>📝 Transcript</h3>
+                        <button class="collapse-btn" onclick="toggleSection('transcriptSection')">−</button>
+                    </div>
+                    <div class="section-content">
+                        <div id="transcriptDisplay" class="transcript-display-compact"></div>
+                        <div class="transcript-meta">
+                            <span id="transcriptionTime" class="meta-info"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Live Mode Sections -->
+                <section class="card live-section-compact" id="liveSection" style="display: none;">
+                    <div class="section-header">
+                        <h3>⚡ Live Transcript</h3>
+                        <span class="live-badge-small">🔴 LIVE</span>
+                    </div>
+                    <div id="liveTranscriptDisplay" class="live-transcript-display-compact">
+                        <p class="placeholder-text">Listening...</p>
+                    </div>
+                    <span id="liveStats" class="live-stats-compact">Ready</span>
+                </section>
+
+                <!-- Placeholder for Zoom/Meet -->
+                <div class="meeting-placeholder" id="meetingPlaceholder">
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">📹</div>
+                        <h3>Position Your Meeting Here</h3>
+                        <p>Move your Zoom/Meet window to fill this space</p>
+                        <p class="small-text">Or use Interview Mode for side-by-side layout</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Q&A (Main Focus) -->
+            <div class="right-panel" id="rightPanel">
+                <!-- Live Questions & Answers -->
+                <section class="card qa-main-section" id="qaMainSection">
+                    <div class="qa-header">
+                        <h2>💡 Questions & Answers</h2>
+                        <span class="qa-subtitle">Latest on top • STAR Format</span>
                     </div>
 
-                    <button id="askBtn" class="btn btn-primary">
-                        <span class="icon">🚀</span> Get STAR Answer
-                    </button>
-                </div>
+                    <!-- Live Q&A for Live Mode -->
+                    <div id="liveQuestionsContainer" class="live-questions-main" style="display: none;">
+                        <p class="placeholder-text">Questions will appear here as they're detected...</p>
+                    </div>
 
-                <div id="answersContainer" class="answers-container">
-                    <!-- Answers will be displayed here -->
-                </div>
-            </section>
+                    <!-- Standard Q&A Container -->
+                    <div id="answersContainer" class="answers-container-main">
+                        <p class="placeholder-text">Start recording to see questions and answers appear here automatically!</p>
+                    </div>
+                </section>
 
-            <!-- Common Questions -->
-            <section class="card common-questions" id="commonQuestions" style="display: none;">
-                <h3>💡 Common Interview Questions</h3>
-                <div class="quick-questions">
-                    <button class="quick-question-btn">Tell me about a challenging situation you faced</button>
-                    <button class="quick-question-btn">Describe a time you showed leadership</button>
-                    <button class="quick-question-btn">How do you handle conflict in a team?</button>
-                    <button class="quick-question-btn">Describe a project you're proud of</button>
-                    <button class="quick-question-btn">Tell me about a time you failed</button>
-                    <button class="quick-question-btn">How do you prioritize tasks?</button>
-                </div>
-            </section>
-        </main>
+                <!-- Manual Question Input (Collapsible) -->
+                <section class="card manual-qa-section" id="manualQASection" style="display: none;">
+                    <div class="section-header" onclick="toggleSection('manualQASection')">
+                        <h3>✍️ Ask Manually</h3>
+                        <button class="collapse-btn">−</button>
+                    </div>
+                    <div class="section-content">
+                        <div class="question-input-group-compact">
+                            <input type="text" id="questionInput" class="question-input-compact"
+                                   placeholder="Type a question...">
+                            <button id="askBtn" class="btn btn-primary btn-compact">Ask</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
 
-        <footer>
-            <p>Made with ❤️ | AI-Powered Meeting Assistant</p>
+        <footer class="compact-footer">
+            <p>Interview Assistant | Press <strong>Interview Mode</strong> for side-by-side layout</p>
         </footer>
     </div>
 
     <script src="{{ url_for('static', filename='js/live_mode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
 </body>
 </html>
