@@ -1,0 +1,55 @@
+[project]
+name = "meeting-review"
+version = "1.0.0"
+description = "Meeting recorder with AI-powered STAR format answers"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Meeting Review Team" }
+]
+keywords = ["meeting", "recorder", "AI", "transcription", "STAR", "interview"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "anthropic>=0.34.0",
+    "openai>=1.40.0",
+    "pyaudio>=0.2.14",
+    "pydub>=0.25.1",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "sounddevice>=0.4.6",
+    "soundfile>=0.12.1",
+    "numpy>=1.24.0",
+    "keyboard>=0.13.5",
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+    "flask-socketio>=5.3.0",
+    "python-socketio>=5.10.0",
+    "eventlet>=0.33.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/geotho123/meeting-review"
+Repository = "https://github.com/geotho123/meeting-review"
+Issues = "https://github.com/geotho123/meeting-review/issues"
+
+[project.scripts]
+meeting-recorder = "meeting_recorder:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = []

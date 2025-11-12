@@ -4,9 +4,23 @@ Get up and running with the Meeting Recorder in under 5 minutes!
 
 ## Step 1: Install Dependencies
 
+### Option A: Using UV (Recommended - 10-100x faster! ⚡)
+
+```bash
+# Install uv (one-time setup)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install project dependencies
+uv sync
+```
+
+### Option B: Using pip (Traditional method)
+
 ```bash
 pip install -r requirements.txt
 ```
+
+> **Pro tip**: UV is much faster! See [UV_SETUP.md](UV_SETUP.md) for details.
 
 ## Step 2: Get API Keys
 
@@ -44,6 +58,12 @@ OPENAI_API_KEY=sk-your-key-here
 
 ## Step 4: Launch Web UI
 
+**With UV:**
+```bash
+uv run python app.py
+```
+
+**Or traditional method:**
 ```bash
 python app.py
 ```
