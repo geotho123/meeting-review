@@ -1,0 +1,10 @@
+anthropic>=0.34.0
+openai>=1.40.0
+pyaudio>=0.2.14
+pydub>=0.25.1
+python-dotenv>=1.0.0
+requests>=2.31.0
+sounddevice>=0.4.6
+soundfile>=0.12.1
+numpy>=1.24.0
+keyboard>=0.13.5
