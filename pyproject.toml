@@ -1,25 +1,11 @@
+# UV-compatible project configuration
+# This is an application, not a library, so we use a simpler setup
+
 [project]
 name = "meeting-review"
 version = "1.0.0"
 description = "Meeting recorder with AI-powered STAR format answers"
-readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "MIT" }
-authors = [
-    { name = "Meeting Review Team" }
-]
-keywords = ["meeting", "recorder", "AI", "transcription", "STAR", "interview"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-]
 
 dependencies = [
     "anthropic>=0.34.0",
@@ -39,17 +25,6 @@ dependencies = [
     "eventlet>=0.33.0",
 ]
 
-[project.urls]
-Homepage = "https://github.com/geotho123/meeting-review"
-Repository = "https://github.com/geotho123/meeting-review"
-Issues = "https://github.com/geotho123/meeting-review/issues"
-
-[project.scripts]
-meeting-recorder = "meeting_recorder:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [tool.uv]
-dev-dependencies = []
+# Don't try to install the package itself, just the dependencies
+package = false
