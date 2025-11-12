@@ -9,8 +9,15 @@ let detectedQuestions = [];
 
 // Initialize socket connection
 document.addEventListener('DOMContentLoaded', function() {
-    initializeSocket();
-    setupEventListeners();
+    console.log('DOM Content Loaded - initializing app');
+    try {
+        initializeSocket();
+        setupEventListeners();
+        console.log('App initialized successfully');
+    } catch (error) {
+        console.error('Error initializing app:', error);
+        alert('Error initializing app. Please check console for details.');
+    }
 });
 
 function initializeSocket() {
@@ -91,6 +98,8 @@ function initializeSocket() {
 }
 
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+
     // Duration selection
     document.querySelectorAll('.duration-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -122,8 +131,22 @@ function setupEventListeners() {
     });
 
     // Recording controls
-    document.getElementById('startBtn').addEventListener('click', startRecording);
-    document.getElementById('stopBtn').addEventListener('click', stopRecording);
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    if (startBtn) {
+        console.log('Start button found, attaching listener');
+        startBtn.addEventListener('click', startRecording);
+    } else {
+        console.error('Start button not found!');
+    }
+
+    if (stopBtn) {
+        console.log('Stop button found, attaching listener');
+        stopBtn.addEventListener('click', stopRecording);
+    } else {
+        console.error('Stop button not found!');
+    }
 
     // Q&A
     document.getElementById('askBtn').addEventListener('click', askQuestion);
@@ -143,8 +166,15 @@ function setupEventListeners() {
 }
 
 function startRecording() {
-    const liveModeEnabled = document.getElementById('liveModeToggle').checked;
+    console.log('startRecording() function called');
 
+    const liveModeToggle = document.getElementById('liveModeToggle');
+    if (!liveModeToggle) {
+        console.error('liveModeToggle element not found!');
+        return;
+    }
+
+    const liveModeEnabled = liveModeToggle.checked;
     console.log('Starting recording for', selectedDuration, 'seconds', 'Live mode:', liveModeEnabled);
 
     // Update UI

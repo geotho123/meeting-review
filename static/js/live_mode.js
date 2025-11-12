@@ -1,7 +1,5 @@
 // Live mode functions for real-time transcription and question detection
-
-let liveTranscript = '';
-let detectedQuestions = [];
+// Note: liveTranscript and detectedQuestions are declared in app.js
 
 function updateLiveTranscript(chunk, full) {
     const liveSection = document.getElementById('liveSection');
