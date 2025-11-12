@@ -42,19 +42,14 @@ Navigate to the project directory and run:
 uv sync
 ```
 
-Or use the classic method:
+**Alternative methods:**
 
 ```bash
-# Install from pyproject.toml
-uv pip install -e .
-```
-
-Or install individual packages:
-
-```bash
-# Install from requirements.txt (if needed)
+# Install from requirements.txt directly
 uv pip install -r requirements.txt
 ```
+
+**Note**: This project is configured as an application (not a library), so UV will install dependencies without trying to build the package itself.
 
 ## Usage with UV
 
