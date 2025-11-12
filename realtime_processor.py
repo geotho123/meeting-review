@@ -15,20 +15,40 @@ class QuestionDetector:
 
     # Common question patterns for interviews and meetings
     QUESTION_PATTERNS = [
-        r'\b(what|why|how|when|where|who|which)\b.*\?',
-        r'\b(tell me about|describe|explain|walk me through)\b.*',
-        r'\b(can you|could you|would you|will you)\b.*\?',
-        r'\b(have you|do you|did you|are you|were you)\b.*\?',
-        r'\b(give me an example of|share an experience)\b.*',
-        r'\b(talk about a time when)\b.*',
+        # Standard question words
+        r'\b(what|why|how|when|where|who|which)\b',
+
+        # Command/Request patterns (common in interviews)
+        r'\b(tell me|describe|explain|walk me through|talk about)\b',
+        r'\b(give me an example|share|discuss)\b',
+        r'\b(talk about a time|think of a time)\b',
+
+        # Modal verb questions
+        r'\b(can you|could you|would you|will you|should you)\b',
+        r'\b(have you|do you|did you|are you|were you|will you)\b',
+
+        # Interview-specific phrases
+        r'\b(your experience with|your role in|your approach to)\b',
+        r'\b(situation where|project where|time when)\b',
+        r'\b(challenge|difficult|problem|conflict)\b.*\b(faced|handled|solved|dealt with)\b',
+        r'\b(strength|weakness|achievement|failure)\b',
+
+        # Prompts that request information
+        r'\b(I\'d like to|I want to|I\'m interested in)\b.*\b(know|hear|understand)\b',
+        r'\b(could you tell|would you share|can you describe)\b',
+
+        # Open-ended prompts
+        r'\b(your thoughts on|your opinion about|your view of)\b',
+        r'\b(working with|dealing with|handling)\b',
     ]
 
-    QUESTION_KEYWORDS = [
-        'what', 'why', 'how', 'when', 'where', 'who', 'which',
-        'tell me', 'describe', 'explain', 'walk me through',
-        'can you', 'could you', 'would you',
-        'have you', 'do you', 'did you',
-        'give me an example', 'share', 'talk about'
+    # Strong indicator keywords that often appear in questions
+    STRONG_INDICATORS = [
+        'tell me', 'describe', 'explain', 'how do', 'what do', 'why do',
+        'can you', 'could you', 'would you', 'have you', 'did you',
+        'challenge', 'difficult', 'problem', 'situation', 'experience',
+        'project', 'role', 'responsibility', 'achievement', 'example',
+        'approach', 'handle', 'deal with', 'think about', 'feel about'
     ]
 
     @staticmethod
@@ -47,6 +67,12 @@ class QuestionDetector:
         # Check for question mark
         if '?' in text:
             return True
+
+        # Check strong indicators first
+        for indicator in QuestionDetector.STRONG_INDICATORS:
+            if indicator in text_lower:
+                print(f"[QuestionDetector] Strong indicator found: '{indicator}'")
+                return True
 
         # Check patterns
         for pattern in QuestionDetector.QUESTION_PATTERNS:
