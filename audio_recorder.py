@@ -49,11 +49,25 @@ class AudioRecorder:
         self.recording = True
         self.audio_data = []
 
-        self.stream = sd.InputStream(
-            samplerate=self.sample_rate,
-            channels=self.channels,
-            callback=self._audio_callback
-        )
+        # Try configured channels first, fallback to mono if needed
+        try:
+            self.stream = sd.InputStream(
+                samplerate=self.sample_rate,
+                channels=self.channels,
+                callback=self._audio_callback
+            )
+        except Exception as e:
+            if self.channels == 2:
+                print(f"Stereo recording not supported, falling back to mono: {e}")
+                self.channels = 1
+                self.stream = sd.InputStream(
+                    samplerate=self.sample_rate,
+                    channels=self.channels,
+                    callback=self._audio_callback
+                )
+            else:
+                raise
+
         self.stream.start()
         print("Recording started. Press Enter or call stop_recording() to stop.")
 

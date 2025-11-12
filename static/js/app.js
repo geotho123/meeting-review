@@ -3,6 +3,9 @@ let socket;
 let currentTranscript = '';
 let selectedDuration = 120;
 let selectedFormat = 'bullets';
+let liveMode = false;
+let liveTranscript = '';
+let detectedQuestions = [];
 
 // Initialize socket connection
 document.addEventListener('DOMContentLoaded', function() {
@@ -63,6 +66,28 @@ function initializeSocket() {
         displayQuickAnswer(data);
         showMessage(`Quick answer generated in ${data.time_ms}ms`, 'success');
     });
+
+    // Live mode event handlers
+    socket.on('live_transcript', function(data) {
+        console.log('Live transcript update:', data);
+        updateLiveTranscript(data.chunk, data.full);
+    });
+
+    socket.on('question_detected', function(data) {
+        console.log('Question detected:', data);
+        displayDetectedQuestion(data.question);
+    });
+
+    socket.on('live_answer', function(data) {
+        console.log('Live answer ready:', data);
+        displayLiveAnswer(data.question, data.answer, data.time_ms);
+    });
+
+    socket.on('live_session_complete', function(data) {
+        console.log('Live session complete:', data);
+        showMessage(`Session complete! ${data.statistics.questions_detected} questions detected`, 'success');
+        currentTranscript = data.full_transcript;
+    });
 }
 
 function setupEventListeners() {
@@ -118,7 +143,9 @@ function setupEventListeners() {
 }
 
 function startRecording() {
-    console.log('Starting recording for', selectedDuration, 'seconds');
+    const liveModeEnabled = document.getElementById('liveModeToggle').checked;
+
+    console.log('Starting recording for', selectedDuration, 'seconds', 'Live mode:', liveModeEnabled);
 
     // Update UI
     document.getElementById('startBtn').disabled = true;
@@ -132,12 +159,25 @@ function startRecording() {
     progressBar.style.display = 'block';
     document.querySelector('.progress-fill').style.width = '0%';
 
-    // Emit start recording event
+    // Show live sections if in live mode
+    if (liveModeEnabled) {
+        document.getElementById('liveSection').style.display = 'block';
+        document.getElementById('liveQASection').style.display = 'block';
+
+        // Clear previous data
+        document.getElementById('liveTranscriptDisplay').innerHTML = '<p class="placeholder-text">Listening for speech...</p>';
+        document.getElementById('liveQuestionsContainer').innerHTML = '<p class="placeholder-text">Questions will appear here...</p>';
+        liveTranscript = '';
+        detectedQuestions = [];
+    }
+
+    // Emit start recording event with live mode
     socket.emit('start_recording', {
-        duration: selectedDuration
+        duration: selectedDuration,
+        live_mode: liveModeEnabled
     });
 
-    updateStatus('Recording...', 'recording');
+    updateStatus(liveModeEnabled ? 'Recording in LIVE mode...' : 'Recording...', 'recording');
 }
 
 function stopRecording() {

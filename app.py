@@ -19,6 +19,7 @@ import io
 from config import Config
 from transcription import Transcriber
 from ai_assistant import AIAssistant
+from realtime_processor import RealtimeProcessor
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -29,18 +30,22 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 config = Config()
 transcriber = None
 ai_assistant = None
+realtime_processor = None
 recording_state = {
     'is_recording': False,
     'audio_data': [],
     'stream': None,
     'start_time': None,
-    'duration': None
+    'duration': None,
+    'live_mode': False,  # Enable real-time transcription
+    'chunk_buffer': [],
+    'chunk_size': 0
 }
 
 
 def init_services():
     """Initialize transcription and AI services."""
-    global transcriber, ai_assistant
+    global transcriber, ai_assistant, realtime_processor
 
     if not transcriber:
         transcriber = Transcriber(
@@ -54,6 +59,18 @@ def init_services():
             anthropic_key=config.anthropic_api_key,
             openai_key=config.openai_api_key
         )
+
+    if not realtime_processor:
+        realtime_processor = RealtimeProcessor(
+            transcriber=transcriber,
+            ai_assistant=ai_assistant,
+            chunk_duration=10,  # Process every 10 seconds
+            overlap=2  # 2 second overlap
+        )
+        # Set up callbacks
+        realtime_processor.on_transcript_update = handle_transcript_update
+        realtime_processor.on_question_detected = handle_question_detected
+        realtime_processor.on_answer_ready = handle_answer_ready
 
 
 @app.route('/')
@@ -88,10 +105,39 @@ def handle_disconnect():
         stop_recording_internal()
 
 
+# Real-time processor callbacks
+def handle_transcript_update(chunk_text, full_transcript):
+    """Handle real-time transcript updates."""
+    socketio.emit('live_transcript', {
+        'chunk': chunk_text,
+        'full': full_transcript,
+        'timestamp': time.time()
+    })
+
+
+def handle_question_detected(question):
+    """Handle detected question."""
+    socketio.emit('question_detected', {
+        'question': question,
+        'timestamp': time.time()
+    })
+
+
+def handle_answer_ready(question, answer, generation_time):
+    """Handle generated answer."""
+    socketio.emit('live_answer', {
+        'question': question,
+        'answer': answer,
+        'time_ms': generation_time,
+        'timestamp': time.time()
+    })
+
+
 @socketio.on('start_recording')
 def handle_start_recording(data):
     """Start recording audio."""
     duration = data.get('duration', None)  # Duration in seconds
+    live_mode = data.get('live_mode', False)  # Enable real-time processing
 
     if recording_state['is_recording']:
         emit('error', {'message': 'Already recording'})
@@ -102,11 +148,20 @@ def handle_start_recording(data):
         recording_state['audio_data'] = []
         recording_state['start_time'] = time.time()
         recording_state['duration'] = duration
+        recording_state['live_mode'] = live_mode
+        recording_state['chunk_buffer'] = []
+        recording_state['chunk_size'] = int(config.sample_rate * 10)  # 10 second chunks
 
-        emit('status', {'message': f'Recording started ({duration}s)', 'type': 'success'})
+        mode_text = "LIVE" if live_mode else "standard"
+        emit('status', {'message': f'Recording started in {mode_text} mode ({duration}s)', 'type': 'success'})
+
+        # Start real-time processor if live mode
+        if live_mode:
+            init_services()
+            realtime_processor.start()
 
         # Start recording in background thread
-        thread = threading.Thread(target=record_audio, args=(duration,))
+        thread = threading.Thread(target=record_audio, args=(duration, live_mode))
         thread.daemon = True
         thread.start()
 
@@ -115,7 +170,7 @@ def handle_start_recording(data):
         emit('error', {'message': f'Failed to start recording: {str(e)}'})
 
 
-def record_audio(duration):
+def record_audio(duration, live_mode=False):
     """Record audio in background thread."""
     def audio_callback(indata, frames, time_info, status):
         if status:
@@ -123,13 +178,43 @@ def record_audio(duration):
         if recording_state['is_recording']:
             recording_state['audio_data'].append(indata.copy())
 
+            # Handle live mode chunking
+            if live_mode:
+                recording_state['chunk_buffer'].append(indata.copy())
+                current_size = sum(len(chunk) for chunk in recording_state['chunk_buffer'])
+
+                # Process chunk when it reaches target size
+                if current_size >= recording_state['chunk_size']:
+                    chunk_data = np.concatenate(recording_state['chunk_buffer'], axis=0)
+                    realtime_processor.add_audio_chunk(chunk_data, config.sample_rate)
+                    recording_state['chunk_buffer'] = []  # Clear buffer
+
     try:
-        # Create audio stream
-        stream = sd.InputStream(
-            samplerate=config.sample_rate,
-            channels=config.channels,
-            callback=audio_callback
-        )
+        # Create audio stream - try configured channels first, fallback to mono
+        channels = config.channels
+        try:
+            stream = sd.InputStream(
+                samplerate=config.sample_rate,
+                channels=channels,
+                callback=audio_callback
+            )
+        except Exception as e:
+            if channels == 2:
+                # Fallback to mono if stereo fails
+                print(f"Stereo recording failed, falling back to mono: {e}")
+                socketio.emit('status', {
+                    'message': 'Stereo not supported, using mono recording',
+                    'type': 'info'
+                })
+                channels = 1
+                stream = sd.InputStream(
+                    samplerate=config.sample_rate,
+                    channels=channels,
+                    callback=audio_callback
+                )
+            else:
+                raise
+
         recording_state['stream'] = stream
         stream.start()
 
@@ -176,9 +261,28 @@ def stop_recording_internal():
     if not recording_state['is_recording']:
         return
 
+    live_mode = recording_state.get('live_mode', False)
     recording_state['is_recording'] = False
 
     try:
+        # Stop realtime processor if in live mode
+        if live_mode and realtime_processor:
+            # Process any remaining chunk buffer
+            if recording_state.get('chunk_buffer'):
+                chunk_data = np.concatenate(recording_state['chunk_buffer'], axis=0)
+                realtime_processor.add_audio_chunk(chunk_data, config.sample_rate)
+
+            # Give processor time to finish current chunks
+            time.sleep(2)
+            realtime_processor.stop()
+
+            # Get statistics
+            stats = realtime_processor.get_statistics()
+            socketio.emit('live_session_complete', {
+                'statistics': stats,
+                'full_transcript': realtime_processor.full_transcript
+            })
+
         # Stop stream
         if recording_state['stream']:
             recording_state['stream'].stop()
@@ -203,13 +307,15 @@ def stop_recording_internal():
             socketio.emit('recording_complete', {
                 'filename': filename,
                 'filepath': filepath,
-                'duration': time.time() - recording_state['start_time']
+                'duration': time.time() - recording_state['start_time'],
+                'live_mode': live_mode
             })
 
-            # Start transcription in background
-            thread = threading.Thread(target=transcribe_audio, args=(filepath,))
-            thread.daemon = True
-            thread.start()
+            # Only do full transcription if not in live mode
+            if not live_mode:
+                thread = threading.Thread(target=transcribe_audio, args=(filepath,))
+                thread.daemon = True
+                thread.start()
         else:
             socketio.emit('error', {'message': 'No audio data recorded'})
 
