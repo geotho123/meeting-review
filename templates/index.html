@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Recorder - STAR Format Answers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎙️ Meeting Recorder</h1>
+            <p class="subtitle">Record meetings and get instant STAR format answers</p>
+            <div class="ai-badge">
+                <span class="badge">AI: {{ ai_provider }}</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Recording Section -->
+            <section class="card recording-section">
+                <h2>📹 Recording</h2>
+
+                <div class="recording-controls">
+                    <div class="duration-selector">
+                        <label>Recording Duration:</label>
+                        <div class="duration-buttons">
+                            <button class="duration-btn" data-duration="60">60s</button>
+                            <button class="duration-btn active" data-duration="120">120s</button>
+                            <button class="duration-btn" data-duration="180">180s</button>
+                            <button class="duration-btn" data-duration="custom">Custom</button>
+                        </div>
+                        <input type="number" id="customDuration" placeholder="seconds" style="display: none;">
+                    </div>
+
+                    <div class="control-buttons">
+                        <button id="startBtn" class="btn btn-primary btn-large">
+                            <span class="icon">●</span> Start Recording
+                        </button>
+                        <button id="stopBtn" class="btn btn-danger btn-large" disabled>
+                            <span class="icon">■</span> Stop Recording
+                        </button>
+                    </div>
+
+                    <div id="recordingStatus" class="status-display">
+                        <div class="status-indicator"></div>
+                        <span class="status-text">Ready to record</span>
+                    </div>
+
+                    <div id="progressBar" class="progress-bar" style="display: none;">
+                        <div class="progress-fill"></div>
+                        <span class="progress-text">0s / 0s</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transcript Section -->
+            <section class="card transcript-section" id="transcriptSection" style="display: none;">
+                <h2>📝 Transcript</h2>
+                <div id="transcriptDisplay" class="transcript-display">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Transcribing audio...</p>
+                    </div>
+                </div>
+                <div class="transcript-meta">
+                    <span id="transcriptionTime" class="meta-info"></span>
+                </div>
+            </section>
+
+            <!-- Q&A Section -->
+            <section class="card qa-section" id="qaSection" style="display: none;">
+                <h2>💬 Ask Questions (STAR Format)</h2>
+
+                <div class="question-input-group">
+                    <input type="text" id="questionInput" class="question-input"
+                           placeholder="Ask a question (e.g., 'Tell me about a challenging situation...')">
+
+                    <div class="format-selector">
+                        <label>Answer Format:</label>
+                        <div class="format-buttons">
+                            <button class="format-btn active" data-format="bullets">
+                                📋 Bullets
+                            </button>
+                            <button class="format-btn" data-format="full">
+                                📄 Full
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="askBtn" class="btn btn-primary">
+                        <span class="icon">🚀</span> Get STAR Answer
+                    </button>
+                </div>
+
+                <div id="answersContainer" class="answers-container">
+                    <!-- Answers will be displayed here -->
+                </div>
+            </section>
+
+            <!-- Common Questions -->
+            <section class="card common-questions" id="commonQuestions" style="display: none;">
+                <h3>💡 Common Interview Questions</h3>
+                <div class="quick-questions">
+                    <button class="quick-question-btn">Tell me about a challenging situation you faced</button>
+                    <button class="quick-question-btn">Describe a time you showed leadership</button>
+                    <button class="quick-question-btn">How do you handle conflict in a team?</button>
+                    <button class="quick-question-btn">Describe a project you're proud of</button>
+                    <button class="quick-question-btn">Tell me about a time you failed</button>
+                    <button class="quick-question-btn">How do you prioritize tasks?</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ | AI-Powered Meeting Assistant</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
