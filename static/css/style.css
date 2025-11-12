@@ -736,3 +736,385 @@ footer {
     color: #f5576c;
     font-weight: 600;
 }
+
+/* ===== SPLIT-SCREEN INTERVIEW LAYOUT ===== */
+
+/* Compact Header */
+.compact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px 25px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.compact-header h1 {
+    font-size: 1.5em;
+    color: #667eea;
+    margin: 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-right {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-layout {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.95em;
+}
+
+.btn-layout:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+}
+
+/* Content Wrapper - Split Screen */
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.content-wrapper.interview-mode {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Left Panel */
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Right Panel */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Compact Recording Section */
+.recording-section-compact {
+    padding: 20px;
+}
+
+.recording-controls-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Compact Mode Selector */
+.mode-selector-compact {
+    padding: 12px;
+    background: linear-gradient(135deg, #f093fb10 0%, #f5576c10 100%);
+    border-radius: 10px;
+    border: 2px solid #f093fb30;
+}
+
+.toggle-label-compact {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 12px;
+}
+
+.toggle-text-compact {
+    flex: 1;
+    font-size: 0.95em;
+    color: #555;
+}
+
+/* Compact Controls Row */
+.controls-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.duration-select {
+    padding: 10px 15px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    background: white;
+    color: #667eea;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95em;
+}
+
+.duration-select:hover {
+    background: #667eea05;
+}
+
+.duration-select:focus {
+    outline: none;
+    border-color: #764ba2;
+}
+
+.btn-compact {
+    padding: 10px 20px;
+    font-size: 1em;
+}
+
+/* Compact Status Display */
+.status-display-compact {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9em;
+}
+
+/* Compact Progress Bar */
+.progress-bar-compact {
+    height: 30px;
+    background: #e9ecef;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Compact Sections (Transcript, Live) */
+.transcript-section-compact,
+.live-section-compact {
+    padding: 15px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #667eea;
+}
+
+.collapse-btn {
+    background: rgba(102, 126, 234, 0.1);
+    border: none;
+    color: #667eea;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.collapse-btn:hover {
+    background: rgba(102, 126, 234, 0.2);
+    transform: scale(1.1);
+}
+
+.section-content {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+
+.transcript-display-compact,
+.live-transcript-display-compact {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    min-height: 100px;
+    max-height: 250px;
+    overflow-y: auto;
+    line-height: 1.6;
+    font-size: 0.95em;
+}
+
+.live-stats-compact {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #999;
+    text-align: center;
+}
+
+/* Meeting Placeholder */
+.meeting-placeholder {
+    background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+    border: 3px dashed #667eea;
+    border-radius: 20px;
+    padding: 60px 30px;
+    text-align: center;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.meeting-placeholder:hover {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border-color: #764ba2;
+}
+
+.placeholder-content {
+    max-width: 300px;
+}
+
+.placeholder-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.meeting-placeholder h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.meeting-placeholder p {
+    color: #666;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.small-text {
+    font-size: 0.85em;
+    color: #999;
+}
+
+/* Main Q&A Section (Right Panel Focus) */
+.qa-main-section {
+    padding: 25px;
+    min-height: 500px;
+}
+
+.qa-header {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.qa-header h2 {
+    color: #667eea;
+    font-size: 2em;
+    margin-bottom: 5px;
+}
+
+.qa-subtitle {
+    color: #999;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+/* Live Questions for Main Section */
+.live-questions-main {
+    margin-top: 20px;
+}
+
+/* Answers Container for Main Section */
+.answers-container-main {
+    margin-top: 20px;
+}
+
+/* Manual Q&A Section */
+.manual-qa-section {
+    padding: 15px;
+}
+
+.question-input-group-compact {
+    display: flex;
+    gap: 10px;
+}
+
+.question-input-compact {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 1em;
+    transition: border-color 0.3s ease;
+}
+
+.question-input-compact:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Compact Footer */
+.compact-footer {
+    text-align: center;
+    color: white;
+    margin-top: 20px;
+    padding: 15px;
+    opacity: 0.8;
+    font-size: 0.9em;
+}
+
+/* Hide placeholder in interview mode */
+.content-wrapper.interview-mode .meeting-placeholder {
+    min-height: 500px;
+}
+
+/* Responsive adjustments for split screen */
+@media (max-width: 1200px) {
+    .content-wrapper.interview-mode {
+        grid-template-columns: 1fr;
+    }
+
+    .meeting-placeholder {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .compact-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-left,
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .controls-row {
+        flex-direction: column;
+    }
+
+    .btn-compact {
+        width: 100%;
+    }
+
+    .question-input-group-compact {
+        flex-direction: column;
+    }
+}

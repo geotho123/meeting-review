@@ -30,13 +30,30 @@ function updateLiveTranscript(chunk, full) {
 }
 
 function displayDetectedQuestion(question) {
-    const qaSection = document.getElementById('liveQASection');
-    const container = document.getElementById('liveQuestionsContainer');
+    // Try to find the live questions container (could be in different places)
+    let container = document.getElementById('liveQuestionsContainer');
 
-    // Show QA section if hidden
-    if (qaSection.style.display === 'none') {
+    // If not found or hidden, also try the main answers container for new layout
+    if (!container || container.offsetParent === null) {
+        // Fall back to main answers container in new layout
+        container = document.getElementById('answersContainer');
+    }
+
+    if (!container) {
+        console.error('No container found for displaying question');
+        return;
+    }
+
+    // Show QA section if it exists and is hidden
+    const qaSection = document.getElementById('liveQASection');
+    if (qaSection && qaSection.style.display === 'none') {
         qaSection.style.display = 'block';
-        container.innerHTML = '';  // Clear placeholder
+    }
+
+    // Clear placeholder if present
+    const placeholder = container.querySelector('.placeholder-text');
+    if (placeholder) {
+        placeholder.remove();
     }
 
     // Create question card
